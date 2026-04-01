@@ -1,67 +1,107 @@
 // Copyright 2021 NNTU-CS
 int countPairs1(int *arr, int len, int value) {
   int count = 0;
+
   for (int i = 0; i < len; ++i)
     for (int j = i + 1; j < len; ++j)
-      if (arr[i] + arr[j] == value) ++count;
+      if (arr[i] + arr[j] == value)
+        ++count;
+
   return count;
 }
 
 int countPairs2(int *arr, int len, int value) {
-  int count = 0, left = 0, right = len - 1;
+  if (len < 2)
+    return 0;
+
+  int count = 0;
+  int left = 0;
+  int right = len - 1;
 
   while (left < right) {
-    int sum = arr[left] + arr[right];
+    while (left < right && arr[left] + arr[right] > value)
+      --right;
 
-    if (sum < value) { ++left; continue; }
-    if (sum > value) { --right; continue; }
+    if (left >= right)
+      break;
+
+    if (arr[left] + arr[right] < value) {
+      ++left;
+      continue;
+    }
 
     if (arr[left] == arr[right]) {
       int n = right - left + 1;
-      return count + n * (n - 1) / 2;
+      count += n * (n - 1) / 2;
+      break;
     }
 
-    int a = arr[left], b = arr[right], lc = 0, rc = 0;
-    while (left <= right && arr[left] == a) { ++left; ++lc; }
-    while (right >= left && arr[right] == b) { --right; ++rc; }
-    count += lc * rc;
+    int temp = right;
+    while (temp > left && arr[left] + arr[temp] == value) {
+      ++count;
+      --temp;
+    }
+
+    ++left;
   }
 
   return count;
 }
 
 int countPairs3(int *arr, int len, int value) {
+  if (len < 2)
+    return 0;
+
+  int *values = new int[len];
+  int *counts = new int[len];
+  int size = 0;
+
+  for (int i = 0; i < len; ++i) {
+    if (size == 0 || values[size - 1] != arr[i]) {
+      values[size] = arr[i];
+      counts[size] = 1;
+      ++size;
+    } else {
+      ++counts[size - 1];
+    }
+  }
+
   int count = 0;
 
-  for (int i = 0; i < len - 1; ++i) {
-    int target = value - arr[i], left = i + 1, right = len - 1;
-    int first = -1, last = -1, mid;
+  for (int i = 0; i < size; ++i) {
+    if (values[i] > value - values[i])
+      break;
+
+    int target = value - values[i];
+    int left = i;
+    int right = size - 1;
+    int pos = -1;
 
     while (left <= right) {
-      mid = left + (right - left) / 2;
-      if (arr[mid] < target) left = mid + 1;
-      else {
-        if (arr[mid] == target) first = mid;
-        right = mid - 1;
+      int mid = left + (right - left) / 2;
+
+      if (values[mid] == target) {
+        pos = mid;
+        break;
       }
-    }
 
-    if (first == -1) continue;
-
-    left = first;
-    right = len - 1;
-
-    while (left <= right) {
-      mid = left + (right - left) / 2;
-      if (arr[mid] > target) right = mid - 1;
-      else {
-        if (arr[mid] == target) last = mid;
+      if (values[mid] < target)
         left = mid + 1;
-      }
+      else
+        right = mid - 1;
     }
 
-    count += last - first + 1;
+    if (pos == -1)
+      continue;
+
+    if (pos == i)
+      count += counts[i] * (counts[i] - 1) / 2;
+    else
+      count += counts[i] * counts[pos];
   }
+
+  delete[] values;
+  delete[] counts;
 
   return count;
 }
