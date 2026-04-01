@@ -1,107 +1,67 @@
 // Copyright 2021 NNTU-CS
-#include <cstdint>
-
-int lowerBound(const int* arr, int left, int right, int target) {
-  while (left < right) {
-    const int mid = left + (right - left) / 2;
-    if (arr[mid] < target) {
-      left = mid + 1;
-    } else {
-      right = mid;
-    }
-  }
-  return left;
+int countPairs1(int *arr, int len, int value) {
+  int count = 0;
+  for (int i = 0; i < len; ++i)
+    for (int j = i + 1; j < len; ++j)
+      if (arr[i] + arr[j] == value) ++count;
+  return count;
 }
 
-int upperBound(const int* arr, int left, int right, int target) {
-  while (left < right) {
-    const int mid = left + (right - left) / 2;
-    if (arr[mid] <= target) {
-      left = mid + 1;
-    } else {
-      right = mid;
-    }
-  }
-  return left;
-}
-
-int countPairs1(int* arr, int len, int value) {
-  std::int64_t count = 0;
-
-  for (int i = 0; i < len; ++i) {
-    for (int j = i + 1; j < len; ++j) {
-      if (arr[i] + arr[j] == value) {
-        ++count;
-      }
-    }
-  }
-
-  return static_cast<int>(count);
-}
-
-int countPairs2(int* arr, int len, int value) {
-  if (len < 2) {
-    return 0;
-  }
-
-  std::int64_t count = 0;
-  int left = 0;
-  int right = len - 1;
+int countPairs2(int *arr, int len, int value) {
+  int count = 0, left = 0, right = len - 1;
 
   while (left < right) {
-    const int sum = arr[left] + arr[right];
+    int sum = arr[left] + arr[right];
 
-    if (sum < value) {
-      ++left;
-    } else if (sum > value) {
-      --right;
-    } else {
-      if (arr[left] == arr[right]) {
-        const std::int64_t count_same = right - left + 1;
-        count += count_same * (count_same - 1) / 2;
-        break;
-      }
+    if (sum < value) { ++left; continue; }
+    if (sum > value) { --right; continue; }
 
-      const int left_value = arr[left];
-      const int right_value = arr[right];
-
-      int left_count = 0;
-      while (left <= right && arr[left] == left_value) {
-        ++left;
-        ++left_count;
-      }
-
-      int right_count = 0;
-      while (right >= left && arr[right] == right_value) {
-        --right;
-        ++right_count;
-      }
-
-      count += static_cast<std::int64_t>(left_count) * right_count;
+    if (arr[left] == arr[right]) {
+      int n = right - left + 1;
+      return count + n * (n - 1) / 2;
     }
+
+    int a = arr[left], b = arr[right], lc = 0, rc = 0;
+    while (left <= right && arr[left] == a) { ++left; ++lc; }
+    while (right >= left && arr[right] == b) { --right; ++rc; }
+    count += lc * rc;
   }
 
-  return static_cast<int>(count);
+  return count;
 }
 
-int countPairs3(int* arr, int len, int value) {
-  std::int64_t count = 0;
+int countPairs3(int *arr, int len, int value) {
+  int count = 0;
 
-  for (int i = 0; i + 1 < len; ++i) {
-    if (arr[i] > value) {
-      break;
+  for (int i = 0; i < len - 1; ++i) {
+    int target = value - arr[i], left = i + 1, right = len - 1;
+    int first = -1, last = -1, mid;
+
+    while (left <= right) {
+      mid = left + (right - left) / 2;
+      if (arr[mid] < target) left = mid + 1;
+      else {
+        if (arr[mid] == target) first = mid;
+        right = mid - 1;
+      }
     }
 
-    const int target = value - arr[i];
-    const int first = lowerBound(arr, i + 1, len, target);
+    if (first == -1) continue;
 
-    if (first == len || arr[first] != target) {
-      continue;
+    left = first;
+    right = len - 1;
+
+    while (left <= right) {
+      mid = left + (right - left) / 2;
+      if (arr[mid] > target) right = mid - 1;
+      else {
+        if (arr[mid] == target) last = mid;
+        left = mid + 1;
+      }
     }
 
-    const int last = upperBound(arr, first, len, target);
-    count += last - first;
+    count += last - first + 1;
   }
 
-  return static_cast<int>(count);
+  return count;
 }
